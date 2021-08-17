@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 
+from django.db.backends.utils import truncate_name
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'vtrees.apps.VtreesConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,6 +54,14 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'mysite.urls'
 
+#additional (debug purpose only)
+
+class InvalidVarException(str):
+    def __mod__(self, other) -> str:
+        from django.template.base import TemplateSyntaxError
+        raise TemplateSyntaxError('Undefined Variable in Template : %s' % other )
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -63,6 +74,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'string_if_invalid':InvalidVarException('%s')
         },
     },
 ]
@@ -105,13 +117,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tokyo'
 
 USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False  #modified originally "USE_TZ = True"
 
 
 # Static files (CSS, JavaScript, Images)
