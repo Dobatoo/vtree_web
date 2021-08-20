@@ -1,2 +1,14 @@
 <h1>{{video.videos_title}}</h1>
 <p>{{video.videos_description}}</p>
+<p>{{video.videos_count_original}}</p>
+
+<form action="{% url 'vtrees:count_register' video.videos_id %}" method="post">
+{% csrf_token %}
+<fieldset>
+    <legend><h1>{{ video.videos_title }}</h1></legend>
+    {% if error_massage %}<p><strong>{{ error_massage }}</strong></p>{% endif %}
+    <input type="number" name="videos_count_original" id="videos_count_original" value="{{video.videos_count_original}}">
+    <labal for="videos_count_original">count of the video here!</label><br>
+</fieldset>
+<input type="submit" value="Register">
+</form>
