@@ -19,9 +19,8 @@ def api_search_post(post_list,channelID:str, **kwargs:Dict[str,str]) -> List[Tup
             part = 'id,snippet',
             channelId=channelID,
             maxResults = 50,
-            order = 'relevance',
+            order = 'viewCount',
             pageToken = kwargs["pageToken"] if "pageToken" in kwargs else '',
-            q=channelID,
             safeSearch='none',
             type='video',
             fields='nextPageToken,items(id(videoId),snippet(channelId,title))'
@@ -42,18 +41,17 @@ def api_search_post(post_list,channelID:str, **kwargs:Dict[str,str]) -> List[Tup
             
     if "nextPageToken" in response:
         nextPageToken = response["nextPageToken"]
-        api_search_post(post_list,channelID,{"pageToken":nextPageToken})
+        return api_search_post(post_list,channelID,**{"pageToken":nextPageToken})
     else:
         return post_list
 
-def api_video(videoID_list:List[str], **kwargs:Dict[str,str]) -> List[Tuple[str,str,int]]:
-    video_info_list = []
+def api_video(video_info_list,videoID_list:List[str], **kwargs:Dict[str,str]) -> List[Tuple[str,str,int]]:
     try:
-        response = youtube.video().list(
+        response = youtube.videos().list(
             part = 'id,snippet,statistics',
             id = ','.join(videoID_list),
             maxResults = 50,
-            pageToken = kwargs["pageToken"] if "pageToken" in kwargs else '',
+            #this does not work for id#pageToken = kwargs["pageToken"] if "pageToken" in kwargs else '',
             fields='nextPageToken,items(id,snippet(description),statistics(viewCount))'
         ).execute()
 
@@ -63,7 +61,7 @@ def api_video(videoID_list:List[str], **kwargs:Dict[str,str]) -> List[Tuple[str,
 
         if "nextPageToken" in response:
             nextPageToken = response["nextPageToken"]
-            video_info_list.extend(api_video(video_info_list,{"pageToken":nextPageToken}))
+            return api_video(video_info_list,video_info_list,**{"pageToken":nextPageToken})
         else:
             return video_info_list
 
@@ -75,8 +73,8 @@ def api_video(videoID_list:List[str], **kwargs:Dict[str,str]) -> List[Tuple[str,
             print ("An Http error %d occurred:\n%s" % (e.resp.status, e.content))
             raise
 
-def api_search_sited(videoID:str,**kwargs:Dict[str,str]) -> List[Tuple[str,str,str]]:
-    sited_list=[]
+def api_search_sited(sited_list,videoID:str,**kwargs:Dict[str,str]) -> List[Tuple[str,str,str]]:
+    print("Lets go")
     try:
         response = youtube.search().list(
             part = 'id,snippet',
@@ -89,16 +87,34 @@ def api_search_sited(videoID:str,**kwargs:Dict[str,str]) -> List[Tuple[str,str,s
             fields='nextPageToken,items(id(videoId),snippet(channelId,title))'
         ).execute()
 
-        #json to list 
-        for item in response.get("items", []):
-            if item["id"]["videoId"] != videoID:
-                sited_list.append((item["id"]["videoId"],item["snippet"]["title"],item["snippet"]["channelId"]))
-
-        if "nextPageToken" in response:
-            nextPageToken = response["nextPageToken"]
-            sited_list.extend(api_search_post(videoID,{"pageToken":nextPageToken}))
+    except HttpError as e:
+        if e.resp.reason == "quotaExceeded":
+            #change APIkey
+            raise
         else:
-            return sited_list
+            print ("An Http error %d occurred:\n%s" % (e.resp.status, e.content))
+            raise
+
+    #json to list 
+    for item in response.get("items", []):
+        if item["id"]["videoId"] != videoID:
+            sited_list.append((item["id"]["videoId"],item["snippet"]["title"],item["snippet"]["channelId"]))
+    if "nextPageToken" in response:
+        nextPageToken = response["nextPageToken"]
+        print("next : "+ nextPageToken)
+        return api_search_sited(sited_list,videoID,**{"pageToken":nextPageToken})
+    else:
+        print("the final")
+        return sited_list
+
+def api_channel_info(channelID:str)->Tuple[str,str,str,int]:#(id,name,icon,viewcount)
+    try:
+        response = youtube.videos().list(
+            part = 'id,snippet,statistics',
+            id = channelID,
+            #this does not work for id#pageToken = kwargs["pageToken"] if "pageToken" in kwargs else '',
+            fields='items(id,snippet(title,thumbnails(high(url))),statistics(viewCount))'
+        ).execute()       
 
     except HttpError as e:
         if e.resp.reason == "quotaExceeded":
@@ -107,3 +123,7 @@ def api_search_sited(videoID:str,**kwargs:Dict[str,str]) -> List[Tuple[str,str,s
         else:
             print ("An Http error %d occurred:\n%s" % (e.resp.status, e.content))
             raise
+    
+    #json to list 
+    item = response.get("items", [])
+    return (item["id"],item["snippet"]["title"],item["snippet"]["thumbnails"]["high"]["url"],item["statistics"]["viewCount"])

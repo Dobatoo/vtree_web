@@ -24,7 +24,7 @@ try:
     response2 = youtube.search().list(
         part = 'id,snippet',
         maxResults = 50,
-        order = 'relevance',
+        order = 'relevance',#date
         q=video_id,
         safeSearch='none',
         type='video',
