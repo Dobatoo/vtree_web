@@ -1,11 +1,5 @@
-import datetime
-from typing_extensions import TypeGuard
-#from home.username.workspace.vtree_web.mysite.vtrees.views import video #???
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
-from django.db.models.deletion import CASCADE
-from django.db.models.fields.related import OneToOneField
-from django.utils import timezone
 
 # Create your models here.
 
@@ -105,14 +99,12 @@ class Mentions(models.Model):
         return self.mentions_channel_id + "is mentioned in" + self.mentions_video_id
 
 class Children(models.Model):
-    children_video_child = models.ManyToManyField(
+    children_video_child = models.ForeignKey(
         'Videos_info',
+        on_delete=models.CASCADE,
         related_name='child_table'
     )
-    children_video_parent = models.ManyToManyField(
-        'Videos_info',
-        related_name='parent_table'
-    )
+    children_video_parent = models.SlugField(max_length=11)
     UniqueConstraint(
         fields=['children_video_child', 'children_video_parent'],
         name='Children_primary_key'
