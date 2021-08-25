@@ -1,0 +1,18 @@
+<header><a href="{% url 'vtrees:index'%}"><p>Vtrees(仮)</p></a></header>
+<h1>投稿動画 by {{channel_info.channels_title}}</h1>
+<a href="{% url 'vtrees:channel' channel_info.channels_id%}"><p>チャンネル詳細に戻る</p></a>
+<p>URL:<a href="https://www.youtube.com/channel/{{channel_info.channels_id}}">https://www.youtube.com/channel/{{channel_info.channels_id}}</a></p>
+<br>
+<p>全ての投稿動画</p>
+<!--width="560" height="315"-->
+
+{% if posts %}
+    <ul>
+    {% for p in posts %}
+        <li><a href="{% url 'vtrees:video' p.posts_video_id.videos_id %}">{{ p.posts_video_id.videos_title }}</a></li>
+        <iframe width="480" height="270" src="https://www.youtube.com/embed/{{p.posts_video_id.videos_id}}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No posted videos are available</p>
+{% endif %}
