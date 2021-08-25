@@ -1,10 +1,10 @@
 import datetime, re
 from typing import List, Tuple
-import youtube_api
+from scripts import youtube_api
 from django.utils import timezone
-from ..mysite.vtrees.models import Channels_detail, Channels_info, Children, Mentions, Posts, Videos_detail, Videos_info
+from vtrees.models import Channels_detail, Channels_info, Children, Mentions, Posts, Videos_detail, Videos_info
 
-def description_search(description:str)->list(list(str),list(str)):#sited_videos,mentioned_channels
+def description_search(description:str)->List[List[str]]:#[sited_videos,mentioned_channels]
     sited_videos = []
     mentioned_channels = []
     pattern_watch = re.compile('https://www.youtube.com/watch\?v=\w{11}')
@@ -29,10 +29,12 @@ def register_channel_info(channelID:str, isRegistered:bool)->None:
         channels_info_lastupdate = timezone.now()
         )
     c.save()
+    c_d = Channels_detail(channels_id = c)
+    c_d.save()
 
 def calculate_channel_sited_mentioned_sum(channelID:str)->None:
     p = Posts.objects.filter(posts_channel_id = channelID)
-    posted_videos = set(v.posts_video_id.videos_id for v in p)
+    posted_videos = set([v.posts_video_id.videos_id for v in p])
     #calculate sited sum
     sited_sum = 0
     sited_videos = set(())
@@ -53,9 +55,9 @@ def calculate_channel_sited_mentioned_sum(channelID:str)->None:
             mentioned_videos.add(v_id)
             mentioned_sum = mentioned_sum + v.mentions_video_id.videos_detail.videos_count_original
     #save
-    c = Channels_detail.objects.get(channels_id = channelID)
+    c = Channels_detail.objects.get(channels_id = Channels_info.objects.get(pk=channelID))
     c.channels_count_sited_sum = sited_sum
-    c.channels_count_sited_sum_lastupdate = timezone()
+    c.channels_count_sited_sum_lastupdate = timezone.now()
     c.channels_count_mentioned_sum = mentioned_sum
     c.channels_count_mentioned_sum_lastupdate = timezone.now()
     c.save()
@@ -69,14 +71,14 @@ def register_video_info(videoID:str, video_title:str, video_publishedAt:datetime
     v.save()
 
 def register_video_detail(videoID_list:List[str])->List[Tuple[str,str,int]]:#id,description,viewCount
-    videoID_list_50 = [videoID_list[i:i+50] for i in range(0, len(videoID_list), 50)]
+    videoID_list_50 = [[v[0] for v in videoID_list[i:i+50]] for i in range(0, len(videoID_list), 50)]
     video_detail_list_return = []
     for l in videoID_list_50:
         video_detail_list = youtube_api.api_video([],l)
         video_detail_list_return.extend(video_detail_list)
         for v in video_detail_list:
             v = Videos_detail(
-                videos_id = v[0],
+                videos_id = Videos_info.objects.get(pk=v[0]),
                 videos_description = v[1],
                 videos_count_original = v[2],
                 videos_detail_lastupdate = timezone.now()
@@ -92,28 +94,28 @@ def calculate_video_sited(videoID:str)->None:
     for c in s:
         n = c.children_video_child.videos_detail.videos_count_original
         sum = sum + n
-    v = Videos_detail.objects.get(videos_id = videoID)
+    v = Videos_detail.objects.get(videos_id = Videos_info.objects.get(pk=videoID))
     v.videos_count_sited = sum
     v.videos_count_sited_lastupdate = timezone.now()
     v.save()
 
 def register_post(channelID:str,videoID:str)->None:
     p = Posts(
-        posts_video_id = videoID,
+        posts_video_id = Videos_info.objects.get(pk=videoID),
         posts_channel_id = channelID
     )
     p.save()
 
 def register_parent(videoID_parent:str,videoID_child:str)->None:
     p = Children(
-        children_video_child = videoID_child,
+        children_video_child = Videos_info.objects.get(pk=videoID_child),
         children_video_parent = videoID_parent
     )
     p.save()
 
 def register_mention(channelID:str,videoID:str)->None:
     m = Mentions(
-        mentions_video_id = videoID,
+        mentions_video_id = Videos_info.objects.get(pk=videoID),
         mentions_channel_id = channelID
     )
     m.save()
@@ -136,11 +138,7 @@ def add_new_channel(channelID:str)->None:
     for p5 in posts_5:
         sited.extend(youtube_api.api_search_sited([],p5))
     for s in sited:
-        register_video_info(
-            videos_id = s[0],
-            videos_title = s[1],
-            videos_published = publishedAt_to_datetime(v[2])
-            )
+        register_video_info(s[0],s[1],publishedAt_to_datetime(v[2]))
         register_post(s[3],s[0])
     #register sited video detail
     sited_details = register_video_detail(sited)
@@ -155,6 +153,9 @@ def add_new_channel(channelID:str)->None:
             register_mention(c,d[0])
     #calculate sited and mentioned
     calculate_channel_sited_mentioned_sum(channelID)
-    calculate_video_sited(channelID)
     #done
     print("channelID: "+ channelID + " has been added!")
+
+def run(*args):
+    if args != ():
+        add_new_channel(args[0])

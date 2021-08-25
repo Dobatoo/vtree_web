@@ -32,7 +32,7 @@ class Videos_detail(models.Model):
     videos_count_sited_lastupdate = models.DateTimeField(null=True,blank=True)
 
     def __str__(self) -> str:
-        return self.videos_id + "(" + self.videos_count_original + ")"
+        return self.videos_id.videos_id + "(" + str(self.videos_count_original) + ")"
 
     def was_sited_counted(self)->bool:
         return self.videos_count_sited_lastupdate is not None
@@ -64,7 +64,7 @@ class Channels_detail(models.Model):
     channels_count_mentioned_sum_lastupdate = models.DateTimeField(null=True,blank=True)
 
     def __str__(self) -> str:
-        return self.channels_id
+        return self.channels_id.channels_id
 
     def was_sited_sum_counted(self)->bool:
         return self.channels_count_sited_sum_lastupdate is not None
@@ -82,7 +82,7 @@ class Posts(models.Model):
     posts_channel_id = models.SlugField(max_length=24)
 
     def __str__(self) -> str:
-        return self.posts_channel_id + " posted "+ self.posts_video_id
+        return self.posts_channel_id + " posted "+ self.posts_video_id.videos_title
 
 class Mentions(models.Model):
     mentions_video_id = models.ForeignKey(
@@ -96,7 +96,7 @@ class Mentions(models.Model):
     )
 
     def __str__(self) -> str:
-        return self.mentions_channel_id + "is mentioned in" + self.mentions_video_id
+        return self.mentions_channel_id + "is mentioned in" + self.mentions_video_id.videos_title
 
 class Children(models.Model):
     children_video_child = models.ForeignKey(
@@ -111,4 +111,4 @@ class Children(models.Model):
     )
 
     def __str__(self) -> str:
-        return self.children_video_child + "is child of"+ self.children_video_parent
+        return self.children_video_child.videos_id + "is child of"+ self.children_video_parent

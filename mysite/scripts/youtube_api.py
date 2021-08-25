@@ -91,7 +91,7 @@ def api_search_sited(sited_list,videoID_list:List[str], keyNum:int = 0,**kwargs:
         response = youtube(keyNum).search().list(
             part = 'id,snippet',
             maxResults = 50,
-            order = 'date',
+            order = 'relevance',
             pageToken = kwargs["pageToken"] if "pageToken" in kwargs else '',
             q=" | ".join(videoID_list) ,
             safeSearch='none',
@@ -122,7 +122,7 @@ def api_search_sited(sited_list,videoID_list:List[str], keyNum:int = 0,**kwargs:
 
 def api_channel_info(channelID:str, keyNum:int = 0)->Tuple[str,str,str,int]:#(id,name,icon,viewcount)
     try:
-        response = youtube(keyNum).videos().list(
+        response = youtube(keyNum).channels().list(
             part = 'id,snippet,statistics',
             id = channelID,
             #this does not work for id#pageToken = kwargs["pageToken"] if "pageToken" in kwargs else '',
@@ -141,5 +141,5 @@ def api_channel_info(channelID:str, keyNum:int = 0)->Tuple[str,str,str,int]:#(id
             raise
     
     #json to list 
-    item = response.get("items", [])
+    item = response.get("items")[0]
     return (item["id"],item["snippet"]["title"],item["snippet"]["thumbnails"]["high"]["url"],int(item["statistics"]["viewCount"]))
