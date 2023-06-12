@@ -3,11 +3,7 @@ from apiclient.errors import HttpError
 from typing import List, Tuple, Dict
 
 API_KEYs = [
-    'AIzaSyB4uBZIDnaS720IVf5qfwvYcrKSb9oiqRw',#1
-    'AIzaSyARAoxNg7Ly8-9qiKTp451c00H22rvfq_U',#2
-    'AIzaSyAe9tLRtvdqDo7-pIPKwpV2zKQ583c7jqg',#3
-    'AIzaSyCkaAljo4WPuS38ylZDfCz6oQUFhtEH-ys',#4
-    'AIzaSyCALzxUmgEkcbQpxDzS43V8QuiqYjYFhGA'#5
+
     ] #hide later
 YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'
