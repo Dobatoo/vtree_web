@@ -8,7 +8,7 @@ API_KEYs = [
     'AIzaSyAe9tLRtvdqDo7-pIPKwpV2zKQ583c7jqg',#3
     'AIzaSyCkaAljo4WPuS38ylZDfCz6oQUFhtEH-ys',#4
     'AIzaSyCALzxUmgEkcbQpxDzS43V8QuiqYjYFhGA'#5
-    ] #hide later
+    ] #hide later #deactivated instead!
 YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'
 
